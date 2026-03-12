@@ -1,0 +1,161 @@
+*gbv.txt*  Git Branch Visualizer for Neovim
+
+Author:  Daiki48
+License: MIT
+Homepage: https://github.com/Daiki48/gbv.nvim
+
+==============================================================================
+CONTENTS                                                        *gbv-contents*
+
+  1. Introduction ............................................. |gbv-introduction|
+  2. Requirements ............................................. |gbv-requirements|
+  3. Usage .................................................... |gbv-usage|
+  4. Commands ................................................. |gbv-commands|
+  5. Keybindings .............................................. |gbv-keybindings|
+  6. Graph View ............................................... |gbv-graph-view|
+  7. Detail View .............................................. |gbv-detail-view|
+  8. Highlight Groups ......................................... |gbv-highlights|
+
+==============================================================================
+1. Introduction                                             *gbv-introduction*
+
+gbv.nvim is a Neovim plugin that displays git branches and commits as a
+colorful graph inside Neovim.  It opens in a dedicated tab and provides a
+split pane for viewing commit details, diffs, and changed files.
+
+Features:
+
+- Colorful graph visualization of branches and commits (up to 10 colors)
+- Each line shows: graph, short hash, date, author, and commit message
+- Branch labels displayed inline on the relevant commits
+- Paginated commit list with lazy loading of older history
+- Commit detail view in a vertical split with full diff
+
+==============================================================================
+2. Requirements                                             *gbv-requirements*
+
+- Neovim >= 0.9
+- Git
+
+==============================================================================
+3. Usage                                                          *gbv-usage*
+
+Open a terminal in any git repository, launch Neovim, and run: >vim
+
+    :GBV
+<
+The plugin opens a new tab with the git log graph.  Press <CR> on any
+commit to view its details in a vertical split.  Press `q` to close.
+
+==============================================================================
+4. Commands                                                    *gbv-commands*
+
+                                                                        *:GBV*
+:GBV
+    Open the Git Branch Visualizer.  Displays a graph of all branches and
+    commits in a dedicated tab.  If GBV is already open, the existing
+    instance is closed and a new one is created.
+
+    This command is only available inside a git repository.  An error
+    message is shown if the current directory is not part of a git
+    repository.
+
+==============================================================================
+5. Keybindings                                              *gbv-keybindings*
+
+The following keybindings are available in the GBV graph buffer:
+
+    Key         Action ~
+    <CR>        Open commit detail view, or load more history when on the
+                "More commits..." row
+    q           Close the graph view and return to the previous tab
+
+The following keybindings are available in the detail buffer:
+
+    Key         Action ~
+    q           Close the detail split
+
+Standard Vim motions (`j`, `k`, `gg`, `G`, <C-d>, <C-u>, etc.) work as
+expected in both buffers.
+
+==============================================================================
+6. Graph View                                               *gbv-graph-view*
+
+The main buffer displays a git log graph with the following columns:
+>
+    graph | short_hash | date | author | message [branch_name]
+<
+- Graph characters are colored per branch (up to 10 distinct colors).
+- Branch labels are shown in brackets on commits that are branch heads.
+- Commit messages are truncated to 50 display columns.
+- When there are more commits to load, a "[More commits...]" row appears
+  at the bottom.  Press <CR> on it to load the next page (200 commits per
+  page).
+
+==============================================================================
+7. Detail View                                             *gbv-detail-view*
+
+When you press <CR> on a commit in the graph view, a vertical split opens
+on the right showing:
+
+- Full commit hash
+- Author and date
+- Branch names containing this commit
+- Whether the commit is merged into the default branch
+- Full commit message body
+- List of changed files with status:
+    [Added]     - new file
+    [Modified]  - modified file
+    [Deleted]   - deleted file
+    [Renamed]   - renamed file (shows old -> new path)
+    [Copied]    - copied file
+- Full diff with syntax highlighting for added/removed lines and hunk
+  headers
+
+==============================================================================
+8. Highlight Groups                                         *gbv-highlights*
+
+All highlight groups use `default = true`, so they can be overridden by
+your colorscheme or by manually calling |nvim_set_hl()|.
+
+Graph colors (one per branch column): ~
+
+    GbvGraph1           Red
+    GbvGraph2           Green
+    GbvGraph3           Yellow
+    GbvGraph4           Blue
+    GbvGraph5           Purple
+    GbvGraph6           Cyan
+    GbvGraph7           Orange
+    GbvGraph8           Crimson
+    GbvGraph9           Light blue
+    GbvGraph10          Lime
+
+Commit information: ~
+
+    GbvHash             Commit hash
+    GbvDate             Commit date
+    GbvAuthor           Author name
+    GbvMessage          Commit message
+    GbvBranchLabel      Branch name labels
+    GbvMore             "More commits..." indicator
+
+Detail view: ~
+
+    GbvDetailHeader     Section headers
+    GbvDetailLabel      Field labels (Hash, Author, etc.)
+    GbvDetailValue      Field values
+    GbvFileAdded        Added file status
+    GbvFileModified     Modified/renamed file status
+    GbvFileDeleted      Deleted file status
+    GbvDiffAdd          Added lines in diff
+    GbvDiffDelete       Removed lines in diff
+    GbvDiffHunk         Hunk headers (@@...@@)
+
+Example: Override the hash color to orange: >lua
+
+    vim.api.nvim_set_hl(0, "GbvHash", { fg = "#d19a66", bold = true })
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

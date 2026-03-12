@@ -1,0 +1,24 @@
+# Luarocks
+*.rock
+*.zip
+*.tar.gz
+
+# Generated docs
+doc/tags
+
+# Test output
+luacov.stats.out
+luacov.report.out
+
+# Misc
+.luarc.json
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Secrets
+.env
+.env.*
+*.key
+*.pem
