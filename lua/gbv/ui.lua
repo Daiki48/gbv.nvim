@@ -90,13 +90,14 @@ end
 ---@return table[] hl_segments highlight information
 local function build_display_line(commit, max_graph_width)
   if commit.is_more then
-    return "[More commits...]", {
+    return "[More commits...]",
       {
-        col_start = 0,
-        col_end = #"[More commits...]",
-        hl = "GbvMore",
-      },
-    }
+        {
+          col_start = 0,
+          col_end = #"[More commits...]",
+          hl = "GbvMore",
+        },
+      }
   end
 
   local graph_part = commit.graph or ""
@@ -115,15 +116,8 @@ local function build_display_line(commit, max_graph_width)
     local max_msg_width = require("gbv").config.max_message_width
     msg = truncate_text(msg, max_msg_width)
 
-    local line = string.format(
-      "%s %s %s %s %s%s",
-      padded_graph,
-      commit.short_hash,
-      commit.date,
-      commit.author,
-      msg,
-      branch_str
-    )
+    local line =
+      string.format("%s %s %s %s %s%s", padded_graph, commit.short_hash, commit.date, commit.author, msg, branch_str)
 
     -- Build highlight information
     local hl_segments = {}
@@ -271,15 +265,7 @@ local function render(cursor_row)
   vim.api.nvim_buf_clear_namespace(M.buf, ns, 0, -1)
   for row, hl_segs in ipairs(all_hl_segments) do
     for _, seg in ipairs(hl_segs) do
-      pcall(
-        vim.api.nvim_buf_add_highlight,
-        M.buf,
-        ns,
-        seg.hl,
-        row - 1,
-        seg.col_start,
-        seg.col_end
-      )
+      pcall(vim.api.nvim_buf_add_highlight, M.buf, ns, seg.hl, row - 1, seg.col_start, seg.col_end)
     end
   end
 

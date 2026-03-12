@@ -14,6 +14,15 @@ M.config = {
   max_message_width = 50,
   -- diff の最大表示行数（超過分は省略）
   max_diff_lines = 2000,
+  -- フロービュー設定
+  flow = {
+    -- リリースブランチのパターン（Lua パターン）
+    release_branch_pattern = "^release",
+    -- メインブランチ名（nil なら自動検出）
+    main_branch = nil,
+    -- タグパターン（nil なら全タグ）
+    tag_pattern = nil,
+  },
 }
 
 --- プラグインの設定
@@ -31,6 +40,12 @@ function M.open()
 
   -- Show main view
   ui.open()
+end
+
+--- Open the flow view
+function M.open_flow()
+  highlight.setup()
+  require("gbv.flow_ui").open()
 end
 
 return M

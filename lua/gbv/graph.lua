@@ -1,41 +1,9 @@
 -- gbv.nvim: Git log parsing and graph data construction
 local M = {}
 
---- Execute a git command and return the result
----@param args string[]
----@param repo_root string|nil
----@return string[]
-local function git_exec(args, repo_root)
-  local cmd = { "git" }
-  if repo_root and repo_root ~= "" then
-    cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = repo_root
-  end
-  for _, a in ipairs(args) do
-    cmd[#cmd + 1] = a
-  end
-  local result = vim.fn.systemlist(cmd)
-  if vim.v.shell_error ~= 0 then
-    vim.notify("gbv.nvim: git command failed: " .. table.concat(cmd, " "), vim.log.levels.WARN)
-    return {}
-  end
-  return result
-end
-
---- Return a deduplicated array
----@param items string[]
----@return string[]
-local function uniq(items)
-  local seen = {}
-  local result = {}
-  for _, item in ipairs(items) do
-    if item ~= "" and not seen[item] then
-      seen[item] = true
-      result[#result + 1] = item
-    end
-  end
-  return result
-end
+local git = require("gbv.git")
+local git_exec = git.exec
+local uniq = git.uniq
 
 --- Get the root directory of the current repository
 ---@param start_dir string|nil
@@ -149,11 +117,11 @@ function M.parse_log(repo_root, limit)
   -- Format: with graph, using separator for easy parsing
   local sep = "\x01"
   local format = table.concat({
-    "%H",   -- full hash
-    "%h",   -- abbreviated hash
-    "%an",  -- author name
-    "%ai",  -- author date (ISO)
-    "%s",   -- commit message first line
+    "%H", -- full hash
+    "%h", -- abbreviated hash
+    "%an", -- author name
+    "%ai", -- author date (ISO)
+    "%s", -- commit message first line
   }, sep)
 
   local commit_limit = limit or 200

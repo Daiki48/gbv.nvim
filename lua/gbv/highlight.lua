@@ -51,6 +51,15 @@ function M.setup()
   vim.api.nvim_set_hl(0, "GbvBranchLabel", { fg = "#98c379", bold = true, default = true })
   vim.api.nvim_set_hl(0, "GbvMore", { fg = "#61afef", bold = true, default = true })
 
+  -- Flow view highlights
+  vim.api.nvim_set_hl(0, "GbvFlowTag", { fg = "#e5c07b", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowBranch", { fg = "#61afef", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowMerged", { fg = "#98c379", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowNotMerged", { fg = "#e06c75", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowLine", { fg = "#5c6370", default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowHeader", { fg = "#c678dd", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "GbvFlowHead", { fg = "#56b6c2", bold = true, default = true })
+
   -- Detail view highlights
   vim.api.nvim_set_hl(0, "GbvDetailHeader", { fg = "#61afef", bold = true, default = true })
   vim.api.nvim_set_hl(0, "GbvDetailLabel", { fg = "#c678dd", bold = true, default = true })
