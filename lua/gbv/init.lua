@@ -5,27 +5,27 @@ local M = {}
 local highlight = require("gbv.highlight")
 local ui = require("gbv.ui")
 
---- デフォルト設定
+--- Default configuration
 ---@type table
 M.config = {
-  -- 1ページあたりのコミット数
+  -- Number of commits per page
   page_size = 200,
-  -- コミットメッセージの最大表示幅
+  -- Max display width for commit messages
   max_message_width = 50,
-  -- diff の最大表示行数（超過分は省略）
+  -- Max diff lines to display (excess lines are truncated)
   max_diff_lines = 2000,
-  -- フロービュー設定
+  -- Flow view settings
   flow = {
-    -- リリースブランチのパターン（Lua パターン）
+    -- Lua pattern to match release branch names
     release_branch_pattern = "^release",
-    -- メインブランチ名（nil なら自動検出）
+    -- Main branch name (nil = auto-detect)
     main_branch = nil,
-    -- タグパターン（nil なら全タグ）
+    -- Lua pattern to filter tags (nil = all tags)
     tag_pattern = nil,
   },
 }
 
---- プラグインの設定
+--- Configure the plugin
 ---@param opts table|nil
 function M.setup(opts)
   M.config = vim.tbl_deep_extend("force", M.config, opts or {})

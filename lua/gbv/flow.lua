@@ -1,11 +1,11 @@
--- gbv.nvim: リリースフロー DAG データ構築
+-- gbv.nvim: Release flow DAG data construction
 local M = {}
 
 local git = require("gbv.git")
 
 ---@class FlowTag
 ---@field name string        -- "v1.0"
----@field hash string        -- コミットハッシュ（annotated なら deref 済み）
+---@field hash string        -- commit hash (dereferenced for annotated tags)
 ---@field date string        -- "2024-01-15"
 
 ---@class FlowBranch
@@ -14,14 +14,14 @@ local git = require("gbv.git")
 
 ---@class FlowDAG
 ---@field main_branch string
----@field tags FlowTag[]               -- 日付降順
+---@field tags FlowTag[]               -- sorted by date descending
 ---@field branches FlowBranch[]
 ---@field matrix table<string, table<string, boolean>>
----@field branch_birth table<string, string|nil> -- branch_name -> 最古のタグ日付（存在判定用）
+---@field branch_birth table<string, string|nil> -- branch_name -> earliest commit date (for existence check)
 
---- タグ一覧を日付降順で取得
+--- Get tags sorted by date descending
 ---@param repo_root string
----@param tag_pattern string|nil  -- Lua パターン（nil なら全タグ）
+---@param tag_pattern string|nil  -- Lua pattern (nil = all tags)
 ---@return FlowTag[]
 function M.get_tags(repo_root, tag_pattern)
   local sep = "\x01"
@@ -36,7 +36,7 @@ function M.get_tags(repo_root, tag_pattern)
     local parts = vim.split(line, sep, { plain = true })
     if #parts >= 4 then
       local name = parts[1]
-      -- annotated tag なら deref したハッシュを使用、なければ tag 自体のハッシュ
+      -- Use dereferenced hash for annotated tags, otherwise the tag's own hash
       local hash = (parts[3] ~= "" and parts[3]) or parts[2]
       local date = parts[4]:match("^(%d%d%d%d%-%d%d%-%d%d)") or parts[4]:sub(1, 10)
 
@@ -57,10 +57,10 @@ function M.get_tags(repo_root, tag_pattern)
   return tags
 end
 
---- リリースブランチ一覧を取得
+--- Get release branches
 ---@param repo_root string
----@param pattern string  -- Lua パターン（例: "^release"）
----@param main_branch string|nil  -- メインブランチ名（先頭に配置する）
+---@param pattern string  -- Lua pattern (e.g. "^release")
+---@param main_branch string|nil  -- main branch name (placed first)
 ---@return FlowBranch[]
 function M.get_release_branches(repo_root, pattern, main_branch)
   local sep = "\x01"
@@ -90,7 +90,7 @@ function M.get_release_branches(repo_root, pattern, main_branch)
     end
   end
 
-  -- メインブランチを先頭に配置
+  -- Place main branch first
   if main_entry then
     table.insert(branches, 1, main_entry)
   end
@@ -98,21 +98,21 @@ function M.get_release_branches(repo_root, pattern, main_branch)
   return branches
 end
 
---- マージマトリクスを構築
---- matrix[tag_name][branch_name] = true（マージ済み）/ false（未マージ）
---- ブランチ数回の git コマンドで済む（タグ数回より効率的）
+--- Build merge matrix
+--- matrix[tag_name][branch_name] = true (merged) / false (not merged)
+--- Runs one git command per branch (more efficient than per-tag)
 ---@param repo_root string
 ---@param tags FlowTag[]
 ---@param branches FlowBranch[]
 ---@return table<string, table<string, boolean>>
 function M.build_merge_matrix(repo_root, tags, branches)
-  -- タグ名のセットを用意
+  -- Build tag name set
   local tag_set = {}
   for _, tag in ipairs(tags) do
     tag_set[tag.name] = true
   end
 
-  -- 初期化: 全セルを false に
+  -- Initialize all cells to false
   local matrix = {}
   for _, tag in ipairs(tags) do
     matrix[tag.name] = {}
@@ -121,7 +121,7 @@ function M.build_merge_matrix(repo_root, tags, branches)
     end
   end
 
-  -- ブランチごとに git tag --merged を実行（ブランチ数回で済む）
+  -- Run git tag --merged per branch (branch-count commands total)
   for _, b in ipairs(branches) do
     local merged_tags = git.exec({
       "tag",
@@ -138,21 +138,21 @@ function M.build_merge_matrix(repo_root, tags, branches)
   return matrix
 end
 
---- ブランチの誕生タイミングを推定（メインブランチからの分岐日）
---- main..branch の差分ログから最古コミットの日付を取得する。
---- 差分がない場合（= main 自体など）は nil を返す（常に existed=true 扱い）。
+--- Estimate branch birth date (fork point from main branch)
+--- Uses main..branch diff log to get the earliest commit date.
+--- Returns nil if no diff (e.g. main itself), meaning always existed.
 ---@param repo_root string
 ---@param branches FlowBranch[]
 ---@param main_branch string
----@return table<string, string|nil> branch_name -> 分岐後の最古コミット日付
+---@return table<string, string|nil> branch_name -> earliest commit date after fork
 function M.get_branch_birth_dates(repo_root, branches, main_branch)
   local birth = {}
   for _, b in ipairs(branches) do
     if b.name == main_branch then
-      -- メインブランチ自体は常に存在扱い
+      -- Main branch always existed
       birth[b.name] = nil
     else
-      -- main..branch でメインブランチとの差分コミットを取得
+      -- Get commits unique to this branch (not in main)
       local lines = git.exec({
         "log",
         "--format=%ai",
@@ -162,7 +162,7 @@ function M.get_branch_birth_dates(repo_root, branches, main_branch)
       if #lines > 0 then
         birth[b.name] = lines[1]:match("^(%d%d%d%d%-%d%d%-%d%d)") or nil
       else
-        -- 差分なし（main と同一）→ 常に existed=true
+        -- No diff (identical to main) -> always existed
         birth[b.name] = nil
       end
     end
@@ -170,7 +170,7 @@ function M.get_branch_birth_dates(repo_root, branches, main_branch)
   return birth
 end
 
---- DAG 全体を構築
+--- Build the full DAG
 ---@param repo_root string
 ---@param config table  -- { release_branch_pattern, main_branch, tag_pattern }
 ---@return FlowDAG|nil
@@ -179,7 +179,7 @@ function M.build_dag(repo_root, config)
   local graph = require("gbv.graph")
   local main_branch = config.main_branch or graph.get_default_branch(repo_root)
   if not main_branch then
-    return nil, "メインブランチを検出できませんでした"
+    return nil, "Could not detect main branch"
   end
 
   local tags = M.get_tags(repo_root, config.tag_pattern)

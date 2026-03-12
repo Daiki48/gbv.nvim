@@ -1,7 +1,7 @@
--- gbv.nvim: 共有 git ユーティリティ
+-- gbv.nvim: Shared git utilities
 local M = {}
 
---- git コマンドを実行して結果を返す
+--- Execute a git command and return the result
 ---@param args string[]
 ---@param repo_root string|nil
 ---@return string[]
@@ -22,7 +22,7 @@ function M.exec(args, repo_root)
   return result
 end
 
---- 重複を除去した配列を返す
+--- Return a deduplicated array
 ---@param items string[]
 ---@return string[]
 function M.uniq(items)

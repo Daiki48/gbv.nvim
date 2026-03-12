@@ -111,7 +111,7 @@ local function build_display_line(commit, max_graph_width)
       branch_str = " [" .. table.concat(commit.branches, ", ") .. "]"
     end
 
-    -- コミットメッセージを設定幅で切り詰め
+    -- Truncate commit message to configured width
     local msg = commit.message or ""
     local max_msg_width = require("gbv").config.max_message_width
     msg = truncate_text(msg, max_msg_width)
@@ -184,7 +184,7 @@ local function build_display_line(commit, max_graph_width)
 end
 
 --- Load commits
---- limit+1件を取得し、超過分があればhas_more=trueとする（off-by-one防止）
+--- Fetch limit+1 items; if excess exists, set has_more=true (off-by-one prevention)
 ---@param limit number
 ---@return table[] commits
 ---@return boolean has_more
@@ -196,7 +196,7 @@ local function load_commits(limit)
     if commit.is_commit then
       commit_count = commit_count + 1
     end
-    -- limit件を超えたら以降は全て除外（余分なグラフ行の混入を防ぐ）
+    -- Exclude everything beyond the limit (prevent stray graph lines)
     if commit_count <= limit then
       result[#result + 1] = commit
     end
@@ -339,7 +339,7 @@ local function cleanup()
       if source_win and vim.api.nvim_win_is_valid(source_win) then
         pcall(vim.api.nvim_set_current_win, source_win)
       end
-      -- タブ番号ではなくタブページIDで閉じる（番号ずれリスクを回避）
+      -- Close by tabpage ID instead of tab number (avoids index shift risk)
       local tab_wins = vim.api.nvim_tabpage_list_wins(gbv_tab)
       for _, w in ipairs(tab_wins) do
         pcall(vim.api.nvim_win_close, w, true)
@@ -429,7 +429,7 @@ function M.open()
   -- Keymap setup
   local kopts = { noremap = true, silent = true, buffer = M.buf }
 
-  -- Enter: コミット詳細表示 / More読み込み
+  -- Enter: show commit detail / load more
   vim.keymap.set("n", "<CR>", function()
     local row = vim.api.nvim_win_get_cursor(0)[1]
     local commit = M.commits[row]
@@ -440,7 +440,7 @@ function M.open()
     end
   end, kopts)
 
-  -- q: 閉じる
+  -- q: close
   vim.keymap.set("n", "q", function()
     cleanup()
   end, kopts)

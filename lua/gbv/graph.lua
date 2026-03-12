@@ -53,7 +53,7 @@ function M.get_containing_branches(repo_root, hash)
 
   table.sort(local_branches)
   table.sort(remote_branches)
-  -- 明示的に新テーブルに結合（vim.list_extend は第1引数を破壊的に変更するため）
+  -- Merge into a new table (vim.list_extend mutates the first argument)
   local combined = {}
   vim.list_extend(combined, local_branches)
   vim.list_extend(combined, remote_branches)
@@ -166,7 +166,7 @@ function M.parse_log(repo_root, limit)
   return commits, graph_lines
 end
 
--- 40文字の16進数ハッシュパターン（モジュールレベルでキャッシュ）
+-- 40-char hex hash pattern (cached at module level)
 local hash_pat = string.rep("%x", 40)
 
 --- Split a line into graph part and data part
@@ -179,7 +179,7 @@ function M.split_graph_data(line, sep)
   local sep_pos = line:find(sep, 1, true)
   if sep_pos then
     local before_sep = line:sub(1, sep_pos - 1)
-    -- 40文字の16進数フルハッシュを検出
+    -- Detect 40-char hex full hash
     local hash_start = before_sep:find(hash_pat)
     if hash_start then
       local graph_str = before_sep:sub(1, hash_start - 1)
@@ -213,7 +213,7 @@ function M.get_commit_detail(repo_root, hash, default_branch)
   -- Get commit message body
   det.body_lines = git_exec({ "show", "--format=%B", "--no-patch", hash }, repo_root)
   det.contained_branches = M.get_containing_branches(repo_root, hash)
-  -- キャッシュ済みの default_branch を使用（未指定時のみ取得）
+  -- Use cached default_branch (fetch only if not provided)
   det.default_branch = default_branch or M.get_default_branch(repo_root)
   if det.default_branch then
     det.merged_into_default = vim.tbl_contains(det.contained_branches, det.default_branch)
@@ -250,7 +250,7 @@ function M.get_commit_detail(repo_root, hash, default_branch)
     end
   end
 
-  -- diff（大量diffによるUIフリーズを防ぐため行数制限あり）
+  -- Diff (line limit to prevent UI freeze on large diffs)
   local MAX_DIFF_LINES = require("gbv").config.max_diff_lines
   local diff = git_exec({
     "show",

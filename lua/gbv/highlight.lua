@@ -27,7 +27,7 @@ function M.setup()
   end
   initialized = true
 
-  -- augroup で重複登録を防止し、カラースキーム変更時にハイライトを再定義
+  -- Prevent duplicate registration; redefine highlights on colorscheme change
   local augroup = vim.api.nvim_create_augroup("GbvHighlight", { clear = true })
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = augroup,

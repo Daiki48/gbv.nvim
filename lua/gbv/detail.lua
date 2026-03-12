@@ -40,7 +40,7 @@ function M.show(commit, repo_root, main_win, default_branch)
   -- Determine main window
   main_win = main_win or vim.api.nvim_get_current_win()
 
-  -- Get detail information（キャッシュ済みdefault_branchを渡す）
+  -- Get detail information (pass cached default_branch)
   local detail = graph.get_commit_detail(repo_root, commit.hash, default_branch)
 
   -- Recreate buffer if invalid
@@ -75,7 +75,7 @@ function M.show(commit, repo_root, main_win, default_branch)
     if vim.api.nvim_win_is_valid(main_win) then
       vim.api.nvim_set_current_win(main_win)
     end
-    -- sbuffer で分割とバッファ設定を同時に行い、フリッカーを防止
+    -- Use sbuffer to split and set buffer simultaneously (prevents flicker)
     vim.cmd("botright vertical sbuffer " .. M.detail_buf)
     M.detail_win = vim.api.nvim_get_current_win()
     vim.api.nvim_set_option_value("number", false, { win = M.detail_win })
@@ -83,7 +83,7 @@ function M.show(commit, repo_root, main_win, default_branch)
     vim.api.nvim_set_option_value("signcolumn", "no", { win = M.detail_win })
     vim.api.nvim_set_option_value("wrap", false, { win = M.detail_win })
   else
-    -- 既存ウィンドウにバッファを設定（バッファ再作成時の対応）
+    -- Set buffer to existing window (handles buffer recreation)
     vim.api.nvim_win_set_buf(M.detail_win, M.detail_buf)
   end
 
@@ -214,7 +214,7 @@ function M.show(commit, repo_root, main_win, default_branch)
     end
   end
 
-  -- Make read-only（nofile + modifiable=false で十分）
+  -- Make read-only (nofile + modifiable=false is sufficient)
   vim.api.nvim_set_option_value("modifiable", false, { buf = M.detail_buf })
 
   -- Move cursor to top
